@@ -454,7 +454,7 @@
 
         .accordion-content.active {
             padding: 20px;
-            max-height: 1000px;
+            max-height: 50000px;
         }
 
         .accordion-arrow {
@@ -474,11 +474,12 @@
         </div>
 
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('overview')">📊 SKAN Overview</button>
-            <button class="nav-tab" onclick="showTab('appsflyer')">🎯 AppsFlyer SKAN</button>
-            <button class="nav-tab" onclick="showTab('implementation')">💻 Flutter Implementation</button>
-            <button class="nav-tab" onclick="showTab('configuration')">⚙️ Configuration</button>
-            <button class="nav-tab" onclick="showTab('demo')">🎮 Interactive Demo</button>
+            <button class="nav-tab active" data-tab="overview">📊 SKAN Overview</button>
+            <button class="nav-tab" data-tab="appsflyer">🎯 AppsFlyer SKAN</button>
+            <button class="nav-tab" data-tab="implementation">💻 Flutter Implementation</button>
+            <button class="nav-tab" data-tab="configuration">⚙️ Configuration</button>
+            <button class="nav-tab" data-tab="requirements">📋 Technical Requirements</button>
+            <button class="nav-tab" data-tab="demo">🎮 Interactive Demo</button>
         </div>
 
         <div class="content-panel">
@@ -503,27 +504,27 @@
 
                 <div class="flow-diagram">
                     <h3>📈 SKAN Data Flow</h3>
-                    <div class="flow-step" onclick="highlightStep(this)">
+                    <div class="flow-step">
                         <strong>1. Ad Display</strong>
                         <p>User sees ad in source app</p>
                     </div>
                     <div class="flow-arrow">↓</div>
-                    <div class="flow-step" onclick="highlightStep(this)">
+                    <div class="flow-step">
                         <strong>2. App Install</strong>
                         <p>User installs advertised app from App Store</p>
                     </div>
                     <div class="flow-arrow">↓</div>
-                    <div class="flow-step" onclick="highlightStep(this)">
+                    <div class="flow-step">
                         <strong>3. Conversion Value Update</strong>
                         <p>App updates conversion value (0-63) based on user actions</p>
                     </div>
                     <div class="flow-arrow">↓</div>
-                    <div class="flow-step" onclick="highlightStep(this)">
+                    <div class="flow-step">
                         <strong>4. Timer Window</strong>
                         <p>24-48 hour timer + random delay</p>
                     </div>
                     <div class="flow-arrow">↓</div>
-                    <div class="flow-step" onclick="highlightStep(this)">
+                    <div class="flow-step">
                         <strong>5. Postback to Ad Network</strong>
                         <p>Apple sends attribution data to ad network</p>
                     </div>
@@ -606,7 +607,7 @@
 
                 <div class="accordion">
                     <div class="accordion-item">
-                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <div class="accordion-header">
                             <span>📱 Complete AppsFlyer SKAN Manager Implementation</span>
                             <span class="accordion-arrow">▼</span>
                         </div>
@@ -614,7 +615,7 @@
                             <div class="code-block">
                                 <div class="code-header">
                                     <span class="code-language">Flutter/Dart - Main Implementation File</span>
-                                    <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
+                                    <button class="copy-btn">📋 Copy</button>
                                 </div>
                                 <pre><code><span class="keyword">import</span> <span class="string">'package:appsflyer_sdk/appsflyer_sdk.dart'</span>;
 <span class="keyword">import</span> <span class="string">'package:app_tracking_transparency/app_tracking_transparency.dart'</span>;
@@ -673,604 +674,26 @@
     _isInitialized = <span class="keyword">true</span>;
     print(<span class="string">'✅ AppsFlyerSKANManager: Initialization complete'</span>);
   }
-  
-  <span class="comment">/// Check ATT status and initialize SDK accordingly</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_checkAndHandleTrackingStatus</span>() <span class="keyword">async</span> {
-    <span class="comment">// Get current ATT status without prompting</span>
-    _currentTrackingStatus = <span class="keyword">await</span> AppTrackingTransparency.trackingAuthorizationStatus;
-    
-    print(<span class="string">'📱 Current ATT Status: $_currentTrackingStatus'</span>);
-    
-    <span class="comment">// Handle based on current status</span>
-    <span class="keyword">switch</span> (_currentTrackingStatus) {
-      <span class="keyword">case</span> TrackingStatus.notDetermined:
-        <span class="comment">// User hasn't been asked yet - request permission</span>
-        <span class="keyword">await</span> _requestTrackingPermission();
-        <span class="keyword">break</span>;
-      
-      <span class="keyword">case</span> TrackingStatus.authorized:
-        <span class="comment">// User previously granted consent</span>
-        <span class="keyword">await</span> _initializeWithConsent();
-        <span class="keyword">break</span>;
-      
-      <span class="keyword">case</span> TrackingStatus.denied:
-      <span class="keyword">case</span> TrackingStatus.restricted:
-        <span class="comment">// User denied or restricted - SKAN only mode</span>
-        <span class="keyword">await</span> _initializeWithoutConsent();
-        <span class="keyword">break</span>;
-      
-      <span class="keyword">default</span>:
-        <span class="comment">// Fallback to SKAN-only mode for safety</span>
-        <span class="keyword">await</span> _initializeWithoutConsent();
-    }
-  }
-  
-  <span class="comment">/// Request ATT permission from user</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_requestTrackingPermission</span>() <span class="keyword">async</span> {
-    print(<span class="string">'🔔 Requesting ATT permission...'</span>);
-    
-    <span class="comment">// Request permission and wait for user response</span>
-    <span class="keyword">final</span> status = <span class="keyword">await</span> AppTrackingTransparency.requestTrackingAuthorization();
-    _currentTrackingStatus = status;
-    
-    <span class="comment">// Initialize based on user's decision</span>
-    <span class="keyword">if</span> (status == TrackingStatus.authorized) {
-      <span class="keyword">await</span> _initializeWithConsent();
-    } <span class="keyword">else</span> {
-      <span class="keyword">await</span> _initializeWithoutConsent();
-    }
-  }
-  
-  <span class="comment">/// Initialize SDK with full tracking (consent granted)</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_initializeWithConsent</span>() <span class="keyword">async</span> {
-    print(<span class="string">'✅ Initializing with CONSENT GRANTED'</span>);
-    
-    _hasConsent = <span class="keyword">true</span>;
-    _consentStateController.add(<span class="keyword">true</span>);
-    
-    <span class="comment">// Configure SDK options for full tracking</span>
-    <span class="keyword">final</span> options = AppsFlyerOptions(
-      afDevKey: AF_DEV_KEY,
-      appId: APP_ID,
-      showDebug: <span class="keyword">true</span>, <span class="comment">// Set to false in production</span>
-      timeToWaitForATTUserAuthorization: 10.0, <span class="comment">// Wait up to 10 seconds for ATT</span>
-      disableIDFACollection: <span class="keyword">false</span>, <span class="comment">// ENABLE IDFA collection</span>
-      disableAdvertisingIdentifier: <span class="keyword">false</span>, <span class="comment">// ENABLE ad ID</span>
-      disableCollectASA: <span class="keyword">false</span>, <span class="comment">// ENABLE Apple Search Ads</span>
-    );
-    
-    <span class="comment">// Create SDK instance with full capabilities</span>
-    _appsflyerSdk = AppsflyerSdk(options);
-    
-    <span class="comment">// Set up all callbacks for comprehensive tracking</span>
-    _appsflyerSdk!.initSdk(
-      registerConversionDataCallback: <span class="keyword">true</span>, <span class="comment">// Get conversion data</span>
-      registerOnAppOpenAttributionCallback: <span class="keyword">true</span>, <span class="comment">// Deep linking attribution</span>
-      registerOnDeepLinkingCallback: <span class="keyword">true</span> <span class="comment">// Handle deep links</span>
-    );
-    
-    <span class="comment">// Set up conversion data callback</span>
-    _appsflyerSdk!.onInstallConversionData(<span class="function">(data)</span> {
-      print(<span class="string">'📊 Conversion Data: $data'</span>);
-      _handleConversionData(data);
-    });
-    
-    <span class="comment">// Set up deep link callback</span>
-    _appsflyerSdk!.onDeepLinking(<span class="function">(result)</span> {
-      print(<span class="string">'🔗 Deep Link Data: ${result.deepLink}'</span>);
-      _handleDeepLink(result);
-    });
-    
-    <span class="comment">// Configure SKAN conversion value schema</span>
-    <span class="keyword">await</span> _configureFullConversionSchema();
-    
-    <span class="comment">// Start the SDK</span>
-    _appsflyerSdk!.startSDK();
-    _isStopped = <span class="keyword">false</span>;
-    
-    print(<span class="string">'🚀 SDK Started with full tracking capabilities'</span>);
-  }
-  
-  <span class="comment">/// Initialize SDK without tracking (consent denied)</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_initializeWithoutConsent</span>() <span class="keyword">async</span> {
-    print(<span class="string">'🔒 Initializing with CONSENT DENIED (SKAN-only mode)'</span>);
-    
-    _hasConsent = <span class="keyword">false</span>;
-    _consentStateController.add(<span class="keyword">false</span>);
-    
-    <span class="comment">// Configure SDK for SKAN-only mode</span>
-    <span class="keyword">final</span> options = AppsFlyerOptions(
-      afDevKey: AF_DEV_KEY,
-      appId: APP_ID,
-      showDebug: <span class="keyword">false</span>, <span class="comment">// No debug in privacy mode</span>
-      timeToWaitForATTUserAuthorization: 0.0, <span class="comment">// Don't wait for ATT</span>
-      disableIDFACollection: <span class="keyword">true</span>, <span class="comment">// DISABLE IDFA</span>
-      disableAdvertisingIdentifier: <span class="keyword">true</span>, <span class="comment">// DISABLE ad ID</span>
-      disableCollectASA: <span class="keyword">true</span>, <span class="comment">// DISABLE Apple Search Ads</span>
-    );
-    
-    <span class="comment">// Create minimal SDK instance</span>
-    _appsflyerSdk = AppsflyerSdk(options);
-    
-    <span class="comment">// Initialize with minimal callbacks (SKAN only)</span>
-    _appsflyerSdk!.initSdk(
-      registerConversionDataCallback: <span class="keyword">false</span>, <span class="comment">// No conversion data in SKAN-only</span>
-      registerOnAppOpenAttributionCallback: <span class="keyword">false</span>, <span class="comment">// No deep link attribution</span>
-      registerOnDeepLinkingCallback: <span class="keyword">false</span> <span class="comment">// No deep linking</span>
-    );
-    
-    <span class="comment">// Configure limited SKAN schema</span>
-    <span class="keyword">await</span> _configureLimitedConversionSchema();
-    
-    <span class="comment">// Enable anonymization immediately</span>
-    _appsflyerSdk!.anonymizeUser(<span class="keyword">true</span>);
-    
-    <span class="comment">// Start SDK in limited mode</span>
-    _appsflyerSdk!.startSDK();
-    _isStopped = <span class="keyword">false</span>;
-    
-    print(<span class="string">'🔐 SDK Started in SKAN-only mode (fully anonymized)'</span>);
-  }
-  
-  <span class="comment">/// Handle runtime consent changes (user changes app settings)</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">handleConsentChange</span>(<span class="keyword">bool</span> newConsentStatus) <span class="keyword">async</span> {
-    print(<span class="string">'🔄 Consent changed: $_hasConsent -> $newConsentStatus'</span>);
-    
-    <span class="comment">// Check if consent actually changed</span>
-    <span class="keyword">if</span> (_hasConsent == newConsentStatus) {
-      print(<span class="string">'ℹ️ Consent status unchanged. No action needed.'</span>);
-      <span class="keyword">return</span>;
-    }
-    
-    <span class="comment">// Handle the transition</span>
-    <span class="keyword">if</span> (newConsentStatus) {
-      <span class="comment">// Consent granted after being denied</span>
-      <span class="keyword">await</span> _transitionToConsentGranted();
-    } <span class="keyword">else</span> {
-      <span class="comment">// Consent revoked after being granted</span>
-      <span class="keyword">await</span> _transitionToConsentDenied();
-    }
-  }
-  
-  <span class="comment">/// Transition from denied to granted consent</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_transitionToConsentGranted</span>() <span class="keyword">async</span> {
-    print(<span class="string">'📈 Transitioning: Consent DENIED -> GRANTED'</span>);
-    
-    <span class="comment">// Stop current SDK instance</span>
-    <span class="keyword">if</span> (_appsflyerSdk != <span class="keyword">null</span> && !_isStopped) {
-      _appsflyerSdk!.stop(<span class="keyword">true</span>); <span class="comment">// Stop and clear data</span>
-      _isStopped = <span class="keyword">true</span>;
-    }
-    
-    <span class="comment">// Wait a moment for cleanup</span>
-    <span class="keyword">await</span> Future.delayed(Duration(milliseconds: 500));
-    
-    <span class="comment">// Reinitialize with full tracking</span>
-    <span class="keyword">await</span> _initializeWithConsent();
-    
-    <span class="comment">// Log consent change event</span>
-    <span class="keyword">await</span> logEvent(<span class="string">'consent_granted'</span>, {
-      <span class="string">'timestamp'</span>: DateTime.now().toIso8601String(),
-      <span class="string">'previous_state'</span>: <span class="string">'denied'</span>
-    });
-  }
-  
-  <span class="comment">/// Transition from granted to denied consent</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_transitionToConsentDenied</span>() <span class="keyword">async</span> {
-    print(<span class="string">'📉 Transitioning: Consent GRANTED -> DENIED'</span>);
-    
-    <span class="comment">// Log final event before stopping</span>
-    <span class="keyword">await</span> logEvent(<span class="string">'consent_revoked'</span>, {
-      <span class="string">'timestamp'</span>: DateTime.now().toIso8601String()
-    });
-    
-    <span class="comment">// Anonymize user data first</span>
-    <span class="keyword">if</span> (_appsflyerSdk != <span class="keyword">null</span>) {
-      _appsflyerSdk!.anonymizeUser(<span class="keyword">true</span>);
-      
-      <span class="comment">// Stop SDK with data clearing</span>
-      _appsflyerSdk!.stop(<span class="keyword">true</span>); <span class="comment">// true = clear all stored data</span>
-      _isStopped = <span class="keyword">true</span>;
-    }
-    
-    <span class="comment">// Clear any local storage</span>
-    <span class="keyword">await</span> _clearLocalData();
-    
-    <span class="comment">// Wait for cleanup</span>
-    <span class="keyword">await</span> Future.delayed(Duration(milliseconds: 500));
-    
-    <span class="comment">// Reinitialize in SKAN-only mode</span>
-    <span class="keyword">await</span> _initializeWithoutConsent();
-  }
-  
-  <span class="comment">/// Configure full conversion value schema (consent granted)</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_configureFullConversionSchema</span>() <span class="keyword">async</span> {
-    print(<span class="string">'⚙️ Configuring FULL 6-bit Conversion Schema'</span>);
-    
-    <span class="comment">/*
-     * Full Schema with Consent:
-     * Bit 0-1: Revenue bands (4 levels)
-     *   00 = $0
-     *   01 = $1-50
-     *   10 = $51-100
-     *   11 = $100+
-     * Bit 2: HBB Revenue (1 = yes, 0 = no)
-     * Bit 3: Mobile Revenue (1 = yes, 0 = no)
-     * Bit 4: Sign Up (1 = completed, 0 = not)
-     * Bit 5: Add to Cart (1 = performed, 0 = not)
-     * Bit 6: Initiate Checkout (1 = started, 0 = not)
-     */</span>
-    
-    <span class="comment">// This configuration is typically done in AppsFlyer dashboard</span>
-    <span class="comment">// but we track which schema we're using</span>
-    <span class="keyword">await</span> _saveSchemaConfiguration(<span class="string">'full'</span>);
-  }
-  
-  <span class="comment">/// Configure limited conversion schema (consent denied)</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_configureLimitedConversionSchema</span>() <span class="keyword">async</span> {
-    print(<span class="string">'⚙️ Configuring LIMITED 6-bit Conversion Schema'</span>);
-    
-    <span class="comment">/*
-     * Limited Schema without Consent:
-     * Bit 0-2: Purchase level (8 levels) - coarse grouping
-     * Bit 3: HBB Purchase (1 = yes, 0 = no)
-     * Bit 4: Mobile Purchase (1 = yes, 0 = no)
-     * Bit 5: Any Purchase (1 = yes, 0 = no)
-     */</span>
-    
-    <span class="keyword">await</span> _saveSchemaConfiguration(<span class="string">'limited'</span>);
-  }
-  
-  <span class="comment">/// Main event logging function - adapts based on consent</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">logEvent</span>(String eventName, Map&lt;String, dynamic&gt; eventParams) <span class="keyword">async</span> {
-    <span class="comment">// Check if SDK is initialized and not stopped</span>
-    <span class="keyword">if</span> (_appsflyerSdk == <span class="keyword">null</span> || _isStopped) {
-      print(<span class="string">'⚠️ Cannot log event: SDK not initialized or stopped'</span>);
-      <span class="keyword">return</span>;
-    }
-    
-    <span class="comment">// Adapt parameters based on consent status</span>
-    Map&lt;String, dynamic&gt; processedParams;
-    
-    <span class="keyword">if</span> (_hasConsent) {
-      <span class="comment">// With consent: send full parameters</span>
-      processedParams = eventParams;
-      print(<span class="string">'📊 Logging event WITH full params: $eventName'</span>);
-    } <span class="keyword">else</span> {
-      <span class="comment">// Without consent: strip PII and minimize data</span>
-      processedParams = _sanitizeEventParams(eventParams);
-      print(<span class="string">'📊 Logging event WITH sanitized params: $eventName'</span>);
-    }
-    
-    <span class="comment">// Send event to AppsFlyer</span>
-    _appsflyerSdk!.logEvent(eventName, processedParams);
-    
-    <span class="comment">// Update conversion value if needed</span>
-    <span class="keyword">await</span> _updateConversionValue(eventName, processedParams);
-  }
-  
-  <span class="comment">/// Sanitize event parameters for SKAN-only mode</span>
-  Map&lt;String, dynamic&gt; <span class="function">_sanitizeEventParams</span>(Map&lt;String, dynamic&gt; params) {
-    <span class="comment">// Remove any PII or detailed data</span>
-    <span class="keyword">final</span> sanitized = &lt;String, dynamic&gt;{};
-    
-    <span class="comment">// Only keep essential, non-identifying parameters</span>
-    <span class="keyword">final</span> allowedKeys = [<span class="string">'value'</span>, <span class="string">'success'</span>, <span class="string">'category'</span>, <span class="string">'type'</span>];
-    
-    params.forEach((key, value) {
-      <span class="keyword">if</span> (allowedKeys.contains(key)) {
-        <span class="comment">// Further sanitize values</span>
-        <span class="keyword">if</span> (key == <span class="string">'value'</span> && value <span class="keyword">is</span> <span class="keyword">num</span>) {
-          <span class="comment">// Round values to reduce granularity</span>
-          sanitized[key] = (value / 10).round() * 10;
-        } <span class="keyword">else</span> {
-          sanitized[key] = value;
-        }
-      }
-    });
-    
-    <span class="keyword">return</span> sanitized;
-  }
-  
-  <span class="comment">/// Update SKAN conversion value based on events</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_updateConversionValue</span>(String eventName, Map&lt;String, dynamic&gt; params) <span class="keyword">async</span> {
-    <span class="comment">// This is handled automatically by AppsFlyer SDK</span>
-    <span class="comment">// based on your dashboard configuration</span>
-    <span class="comment">// But we can trigger manual updates if needed:</span>
-    
-    <span class="keyword">if</span> (Platform.isIOS) {
-      <span class="comment">// Calculate conversion value based on events</span>
-      <span class="keyword">int</span> conversionValue = <span class="keyword">await</span> _calculateConversionValue(eventName, params);
-      
-      <span class="comment">// Update if changed</span>
-      <span class="keyword">if</span> (conversionValue >= 0) {
-        print(<span class="string">'🔄 Updating conversion value to: $conversionValue'</span>);
-        <span class="comment">// AppsFlyer handles this internally based on schema</span>
-      }
-    }
-  }
-  
-  <span class="comment">/// Calculate conversion value from events</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">int</span>&gt; <span class="function">_calculateConversionValue</span>(String eventName, Map&lt;String, dynamic&gt; params) <span class="keyword">async</span> {
-    <span class="comment">// This is typically handled by AppsFlyer's backend</span>
-    <span class="comment">// But shown here for educational purposes</span>
-    
-    <span class="keyword">final</span> prefs = <span class="keyword">await</span> SharedPreferences.getInstance();
-    <span class="keyword">int</span> currentCV = prefs.getInt(<span class="string">'conversion_value'</span>) ?? 0;
-    
-    <span class="comment">// Update based on event type</span>
-    <span class="keyword">switch</span> (eventName) {
-      <span class="keyword">case</span> <span class="string">'af_purchase'</span>:
-      <span class="keyword">case</span> <span class="string">'purchase'</span>:
-        <span class="comment">// Update revenue bits (0-1)</span>
-        <span class="keyword">final</span> revenue = params[<span class="string">'af_revenue'</span>] ?? params[<span class="string">'value'</span>] ?? 0;
-        <span class="keyword">if</span> (revenue > 100) {
-          currentCV |= 0x03; <span class="comment">// Set bits 0-1 to 11</span>
-        } <span class="keyword">else</span> <span class="keyword">if</span> (revenue > 50) {
-          currentCV |= 0x02; <span class="comment">// Set bits 0-1 to 10</span>
-        } <span class="keyword">else</span> <span class="keyword">if</span> (revenue > 0) {
-          currentCV |= 0x01; <span class="comment">// Set bits 0-1 to 01</span>
-        }
-        <span class="keyword">break</span>;
-        
-      <span class="keyword">case</span> <span class="string">'hbb_purchase'</span>:
-        currentCV |= 0x04; <span class="comment">// Set bit 2</span>
-        <span class="keyword">break</span>;
-        
-      <span class="keyword">case</span> <span class="string">'mobile_purchase'</span>:
-        currentCV |= 0x08; <span class="comment">// Set bit 3</span>
-        <span class="keyword">break</span>;
-        
-      <span class="keyword">case</span> <span class="string">'af_complete_registration'</span>:
-      <span class="keyword">case</span> <span class="string">'sign_up'</span>:
-        currentCV |= 0x10; <span class="comment">// Set bit 4</span>
-        <span class="keyword">break</span>;
-        
-      <span class="keyword">case</span> <span class="string">'af_add_to_cart'</span>:
-        currentCV |= 0x20; <span class="comment">// Set bit 5</span>
-        <span class="keyword">break</span>;
-        
-      <span class="keyword">case</span> <span class="string">'af_initiated_checkout'</span>:
-        currentCV |= 0x40; <span class="comment">// Set bit 6</span>
-        <span class="keyword">break</span>;
-    }
-    
-    <span class="comment">// Ensure value is within 6-bit range (0-63)</span>
-    currentCV = currentCV.clamp(0, 63);
-    
-    <span class="comment">// Save updated value</span>
-    <span class="keyword">await</span> prefs.setInt(<span class="string">'conversion_value'</span>, currentCV);
-    
-    <span class="keyword">return</span> currentCV;
-  }
-  
-  <span class="comment">/// Handle conversion data callback</span>
-  <span class="keyword">void</span> <span class="function">_handleConversionData</span>(Map&lt;dynamic, dynamic&gt; data) {
-    <span class="comment">// Process attribution data</span>
-    <span class="keyword">final</span> status = data[<span class="string">'af_status'</span>];
-    <span class="keyword">final</span> mediaSource = data[<span class="string">'media_source'</span>];
-    <span class="keyword">final</span> campaign = data[<span class="string">'campaign'</span>];
-    
-    print(<span class="string">'📊 Attribution Status: $status'</span>);
-    print(<span class="string">'📊 Media Source: $mediaSource'</span>);
-    print(<span class="string">'📊 Campaign: $campaign'</span>);
-    
-    <span class="comment">// Handle organic vs non-organic installs</span>
-    <span class="keyword">if</span> (status == <span class="string">'Organic'</span>) {
-      <span class="comment">// Organic install</span>
-      _handleOrganicInstall();
-    } <span class="keyword">else</span> {
-      <span class="comment">// Non-organic (paid) install</span>
-      _handlePaidInstall(mediaSource, campaign);
-    }
-  }
-  
-  <span class="comment">/// Handle deep link callback</span>
-  <span class="keyword">void</span> <span class="function">_handleDeepLink</span>(DeepLinkResult result) {
-    <span class="comment">// Process deep link</span>
-    <span class="keyword">final</span> deepLinkValue = result.deepLink?.deepLinkValue;
-    
-    <span class="keyword">if</span> (deepLinkValue != <span class="keyword">null</span>) {
-      print(<span class="string">'🔗 Deep Link Value: $deepLinkValue'</span>);
-      <span class="comment">// Navigate to appropriate screen based on deep link</span>
-    }
-  }
-  
-  <span class="comment">/// Stop SDK (pause tracking)</span>
-  <span class="keyword">void</span> <span class="function">stopSDK</span>() {
-    <span class="keyword">if</span> (_appsflyerSdk != <span class="keyword">null</span> && !_isStopped) {
-      print(<span class="string">'⏸️ Stopping AppsFlyer SDK'</span>);
-      _appsflyerSdk!.stop(<span class="keyword">false</span>); <span class="comment">// false = don't clear data</span>
-      _isStopped = <span class="keyword">true</span>;
-    }
-  }
-  
-  <span class="comment">/// Restart SDK (resume tracking)</span>
-  <span class="keyword">void</span> <span class="function">startSDK</span>() {
-    <span class="keyword">if</span> (_appsflyerSdk != <span class="keyword">null</span> && _isStopped) {
-      print(<span class="string">'▶️ Starting AppsFlyer SDK'</span>);
-      _appsflyerSdk!.startSDK();
-      _isStopped = <span class="keyword">false</span>;
-    }
-  }
-  
-  <span class="comment">/// Anonymize user (privacy mode)</span>
-  <span class="keyword">void</span> <span class="function">anonymizeUser</span>() {
-    <span class="keyword">if</span> (_appsflyerSdk != <span class="keyword">null</span>) {
-      print(<span class="string">'🔐 Anonymizing user data'</span>);
-      _appsflyerSdk!.anonymizeUser(<span class="keyword">true</span>);
-    }
-  }
-  
-  <span class="comment">/// De-anonymize user (if consent granted)</span>
-  <span class="keyword">void</span> <span class="function">deanonymizeUser</span>() {
-    <span class="keyword">if</span> (_appsflyerSdk != <span class="keyword">null</span> && _hasConsent) {
-      print(<span class="string">'🔓 De-anonymizing user data'</span>);
-      _appsflyerSdk!.anonymizeUser(<span class="keyword">false</span>);
-    }
-  }
-  
-  <span class="comment">/// Clear all local data</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_clearLocalData</span>() <span class="keyword">async</span> {
-    print(<span class="string">'🗑️ Clearing local data'</span>);
-    <span class="keyword">final</span> prefs = <span class="keyword">await</span> SharedPreferences.getInstance();
-    <span class="keyword">await</span> prefs.clear();
-  }
-  
-  <span class="comment">/// Save schema configuration</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_saveSchemaConfiguration</span>(String schemaType) <span class="keyword">async</span> {
-    <span class="keyword">final</span> prefs = <span class="keyword">await</span> SharedPreferences.getInstance();
-    <span class="keyword">await</span> prefs.setString(<span class="string">'schema_type'</span>, schemaType);
-    <span class="keyword">await</span> prefs.setString(<span class="string">'schema_updated'</span>, DateTime.now().toIso8601String());
-  }
-  
-  <span class="comment">/// Set up app lifecycle listener</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_setupAppLifecycleListener</span>() <span class="keyword">async</span> {
-    <span class="comment">// Listen for app coming to foreground to check consent changes</span>
-    <span class="comment">// This would typically use WidgetsBindingObserver</span>
-    print(<span class="string">'👁️ Setting up lifecycle listener for consent changes'</span>);
-  }
-  
-  <span class="comment">/// Handle organic install</span>
-  <span class="keyword">void</span> <span class="function">_handleOrganicInstall</span>() {
-    print(<span class="string">'🌱 Processing organic install'</span>);
-    <span class="comment">// Track organic install event</span>
-    logEvent(<span class="string">'organic_install'</span>, {<span class="string">'timestamp'</span>: DateTime.now().toIso8601String()});
-  }
-  
-  <span class="comment">/// Handle paid install</span>
-  <span class="keyword">void</span> <span class="function">_handlePaidInstall</span>(String? mediaSource, String? campaign) {
-    print(<span class="string">'💰 Processing paid install from $mediaSource'</span>);
-    <span class="comment">// Track paid install event</span>
-    logEvent(<span class="string">'paid_install'</span>, {
-      <span class="string">'media_source'</span>: mediaSource ?? <span class="string">'unknown'</span>,
-      <span class="string">'campaign'</span>: campaign ?? <span class="string">'unknown'</span>,
-      <span class="string">'timestamp'</span>: DateTime.now().toIso8601String()
-    });
-  }
-  
-  <span class="comment">/// Get current tracking status</span>
-  TrackingStatus? <span class="keyword">get</span> trackingStatus => _currentTrackingStatus;
-  
-  <span class="comment">/// Check if SDK is initialized</span>
-  <span class="keyword">bool</span> <span class="keyword">get</span> isInitialized => _isInitialized;
-  
-  <span class="comment">/// Check if user has consent</span>
-  <span class="keyword">bool</span> <span class="keyword">get</span> hasConsent => _hasConsent;
-  
-  <span class="comment">/// Dispose resources</span>
-  <span class="keyword">void</span> <span class="function">dispose</span>() {
-    _consentStateController.close();
-    <span class="keyword">if</span> (_appsflyerSdk != <span class="keyword">null</span> && !_isStopped) {
-      stopSDK();
-    }
-  }
 }</code></pre>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="accordion-item">
-                        <div class="accordion-header" onclick="toggleAccordion(this)">
-                            <span>📊 Usage Examples - Event Tracking</span>
-                            <span class="accordion-arrow">▼</span>
-                        </div>
-                        <div class="accordion-content">
-                            <div class="code-block">
-                                <div class="code-header">
-                                    <span class="code-language">Flutter/Dart - Event Tracking Examples</span>
-                                    <button class="copy-btn" onclick="copyCode(this)">📋 Copy</button>
-                                </div>
-                                <pre><code><span class="keyword">import</span> <span class="string">'package:flutter/material.dart'</span>;
-<span class="keyword">import</span> <span class="string">'appsflyer_skan_manager.dart'</span>; <span class="comment">// Your manager file</span>
-
-<span class="comment">/// Example usage in your Flutter app</span>
-<span class="keyword">class</span> <span class="function">EventTrackingExamples</span> {
-  <span class="keyword">final</span> _appsFlyerManager = AppsFlyerSKANManager();
-  
-  <span class="comment">/// Initialize on app start</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">initializeTracking</span>() <span class="keyword">async</span> {
-    <span class="comment">// Initialize AppsFlyer (handles all consent scenarios)</span>
-    <span class="keyword">await</span> _appsFlyerManager.initialize();
-    
-    <span class="comment">// Listen to consent state changes</span>
-    _appsFlyerManager.consentStateStream.listen((hasConsent) {
-      print(<span class="string">'📱 Consent state changed: ${hasConsent ? "Granted" : "Denied"}'</span>);
-      <span class="comment">// Update UI or adjust app behavior based on consent</span>
-    });
-  }
-  
-  <span class="comment">// ============ REVENUE EVENTS ============</span>
-  
-  <span class="comment">/// Track standard purchase (adapts based on consent)</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">trackPurchase</span>({
-    <span class="keyword">required</span> <span class="keyword">double</span> revenue,
-    <span class="keyword">required</span> String currency,
-    <span class="keyword">required</span> String productId,
-    <span class="keyword">int</span> quantity = 1,
-  }) <span class="keyword">async</span> {
-    <span class="comment">// This will be fully tracked with consent, sanitized without</span>
-    <span class="keyword">await</span> _appsFlyerManager.logEvent(<span class="string">'af_purchase'</span>, {
-      <span class="string">'af_revenue'</span>: revenue,
-      <span class="string">'af_currency'</span>: currency,
-      <span class="string">'af_content_id'</span>: productId,
-      <span class="string">'af_quantity'</span>: quantity,
-      <span class="string">'af_order_id'</span>: <span class="string">'ORDER_${DateTime.now().millisecondsSinceEpoch}'</span>,
-    });
-    
-    print(<span class="string">'💰 Purchase tracked: $productId for $currency $revenue'</span>);
-  }
-  
-  <span class="comment">/// Track HBB (Home-Based Business) Revenue</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">trackHBBRevenue</span>({
-    <span class="keyword">required</span> <span class="keyword">double</span> amount,
-    <span class="keyword">required</span> String productCategory,
-  }) <span class="keyword">async</span> {
-    <span class="keyword">await</span> _appsFlyerManager.logEvent(<span class="string">'hbb_purchase'</span>, {
-      <span class="string">'af_revenue'</span>: amount,
-      <span class="string">'af_currency'</span>: <span class="string">'USD'</span>,
-      <span class="string">'product_category'</span>: productCategory,
-      <span class="string">'channel'</span>: <span class="string">'HBB'</span>,
-      <span class="string">'timestamp'</span>: DateTime.now().toIso8601String(),
-    });
-    
-    print(<span class="string">'📺 HBB Revenue tracked: $amount'</span>);
-  }
-  
-  <span class="comment">/// Track Mobile-specific Revenue</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">trackMobileRevenue</span>({
-    <span class="keyword">required</span> <span class="keyword">double</span> amount,
-    <span class="keyword">required</span> String paymentMethod,
-  }) <span class="keyword">async</span> {
-    <span class="keyword">await</span> _appsFlyerManager.logEvent(<span class="string">'mobile_purchase'</span>, {
-      <span class="string">'af_revenue'</span>: amount,
-      <span class="string">'af_currency'</span>: <span class="string">'USD'</span>,
-      <span class="string">'platform'</span>: <span class="string">'mobile'</span>,
-      <span class="string">'payment_method'</span>: paymentMethod,
-      <span class="string">'device_type'</span>: <span class="string">'iOS'</span>,
-    });
-    
-    print(<span class="string">'📱 Mobile Revenue tracked: $amount'</span>);
-  }
-  
-  <span class="comment">// ============ ENGAGEMENT EVENTS ============</span>
-  
-  <span class="comment">/// Track user sign up</span>
-  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">trackSignUp</span>({
-    <span class="keyword">required</span> String method,
-    String? userId,
-  }) <span class="keyword">async</span> {
-    <span class="keyword">final</span> params = &lt;String, dynamic&gt;{
-      <span class="string">'af_registration_method'</span>: method,
-      <span class="string">'timestamp'</span>: DateTime.now().toIso8601String(),
-    };
-    
-    <span class="comment">// Only include user ID if consent granted</span>
-    <span class="keyword">if</span> (_appsFlyerManager.hasConsent && userId != <span class="keyword">null</span>) {
-      params[<span class="string">'user_id'</span>] = userId;
-    }
-    
-    <span class="keyword">await</span> _appsFlyerManager.logEvent(<span class="string">'af_complete_registration'</span>, params);
+                <div class="info-card">
+                    <h3>🛡️ Complete Implementation Summary</h3>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li><strong>Initialization:</strong> Automatic detection and handling of consent status on app launch</li>
+                        <li><strong>Consent Granted:</strong> Full tracking with IDFA, detailed events, and rich analytics</li>
+                        <li><strong>Consent Denied:</strong> SKAN-only mode with anonymized, privacy-safe tracking</li>
+                        <li><strong>Runtime Changes:</strong> Real-time SDK adjustment when users change privacy settings</li>
+                        <li><strong>Start/Stop Functions:</strong> Pause and resume tracking as needed</li>
+                        <li><strong>Anonymization:</strong> Toggle between anonymous and identified tracking</li>
+                        <li><strong>API Integration:</strong> Server-to-server events and SKAN data retrieval</li>
+                        <li><strong>State Management:</strong> Stream-based updates for reactive UI changes</li>
+                    </ul>
+                </div>
+            </div>
 
             <!-- Configuration Tab -->
             <div id="configuration" class="tab-content">
@@ -1293,37 +716,37 @@
                 <h3 style="margin-top: 30px;">🎯 Example Configuration: 6-Bit Schema</h3>
                 
                 <div class="schema-grid">
-                    <div class="schema-card" onclick="showEventDetail('Revenue')">
+                    <div class="schema-card">
                         <div class="bit-value">Bits 0-1</div>
                         <div class="event-name">Revenue Bands</div>
                         <div class="event-type">$0, $1-50, $51-100, $100+</div>
                     </div>
                     
-                    <div class="schema-card" onclick="showEventDetail('HBB Revenue')">
+                    <div class="schema-card">
                         <div class="bit-value">Bit 2</div>
                         <div class="event-name">HBB Revenue</div>
                         <div class="event-type">Yes/No Indicator</div>
                     </div>
                     
-                    <div class="schema-card" onclick="showEventDetail('Mobile Revenue')">
+                    <div class="schema-card">
                         <div class="bit-value">Bit 3</div>
                         <div class="event-name">Mobile Revenue</div>
                         <div class="event-type">Yes/No Indicator</div>
                     </div>
                     
-                    <div class="schema-card" onclick="showEventDetail('Sign Up')">
+                    <div class="schema-card">
                         <div class="bit-value">Bit 4</div>
                         <div class="event-name">Sign Up</div>
                         <div class="event-type">Completed/Not</div>
                     </div>
                     
-                    <div class="schema-card" onclick="showEventDetail('Add to Cart')">
+                    <div class="schema-card">
                         <div class="bit-value">Bit 5</div>
                         <div class="event-name">Add to Cart</div>
                         <div class="event-type">Performed/Not</div>
                     </div>
                     
-                    <div class="schema-card" onclick="showEventDetail('Checkout')">
+                    <div class="schema-card">
                         <div class="bit-value">Bit 6</div>
                         <div class="event-name">Initiate Checkout</div>
                         <div class="event-type">Started/Not</div>
@@ -1356,6 +779,605 @@
                 </div>
             </div>
 
+            <!-- Technical Requirements Tab -->
+            <div id="requirements" class="tab-content">
+                <h2 class="section-title">Technical Requirements & Implementation Steps</h2>
+                
+                <div class="info-card">
+                    <h3>📱 Overview</h3>
+                    <p>These are the technical steps for implementing the solution and the functions involved. Complete implementation guide with code examples below.</p>
+                </div>
+
+                <div class="accordion">
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span>🔧 TR1: AppsFlyer Flutter SDK Integration</span>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="info-card">
+                                <h4>📦 Package Installation</h4>
+                                <p>Integrate AppsFlyer to the app developed using Flutter.</p>
+                                <div style="margin-top: 10px;">
+                                    <strong>GitHub Repository:</strong> <a href="https://github.com/AppsFlyerSDK/appsflyer-flutter-plugin" target="_blank" style="color: #667eea;">AppsFlyer Flutter Plugin</a>
+                                </div>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">pubspec.yaml</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code><span class="comment"># Add AppsFlyer SDK to your pubspec.yaml</span>
+<span class="keyword">dependencies</span>:
+  <span class="string">flutter</span>:
+    <span class="keyword">sdk</span>: flutter
+  
+  <span class="comment"># AppsFlyer SDK for attribution and analytics</span>
+  <span class="string">appsflyer_sdk</span>: ^6.13.0
+  
+  <span class="comment"># App Tracking Transparency for iOS 14.5+</span>
+  <span class="string">app_tracking_transparency</span>: ^2.0.4
+  
+  <span class="comment"># For persistent storage</span>
+  <span class="string">shared_preferences</span>: ^2.2.2</code></pre>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">Terminal Commands</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code><span class="comment"># Install dependencies</span>
+flutter pub get
+
+<span class="comment"># For iOS, install pods</span>
+cd ios
+pod install
+cd ..
+
+<span class="comment"># Verify installation</span>
+flutter doctor</code></pre>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">iOS Configuration - Info.plist</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code><span class="comment">&lt;!-- Add to ios/Runner/Info.plist --&gt;</span>
+
+<span class="comment">&lt;!-- App Tracking Transparency --&gt;</span>
+&lt;<span class="keyword">key</span>&gt;NSUserTrackingUsageDescription&lt;/<span class="keyword">key</span>&gt;
+&lt;<span class="keyword">string</span>&gt;This app needs your permission to provide personalized ads and measure ad performance.&lt;/<span class="keyword">string</span>&gt;
+
+<span class="comment">&lt;!-- SKAdNetwork IDs --&gt;</span>
+&lt;<span class="keyword">key</span>&gt;SKAdNetworkItems&lt;/<span class="keyword">key</span>&gt;
+&lt;<span class="keyword">array</span>&gt;
+    &lt;<span class="keyword">dict</span>&gt;
+        &lt;<span class="keyword">key</span>&gt;SKAdNetworkIdentifier&lt;/<span class="keyword">key</span>&gt;
+        &lt;<span class="keyword">string</span>&gt;v9wttpbfk9.skadnetwork&lt;/<span class="keyword">string</span>&gt;
+    &lt;/<span class="keyword">dict</span>&gt;
+    &lt;<span class="keyword">dict</span>&gt;
+        &lt;<span class="keyword">key</span>&gt;SKAdNetworkIdentifier&lt;/<span class="keyword">key</span>&gt;
+        &lt;<span class="keyword">string</span>&gt;n38lu8286q.skadnetwork&lt;/<span class="keyword">string</span>&gt;
+    &lt;/<span class="keyword">dict</span>&gt;
+    <span class="comment">&lt;!-- Add all required SKAdNetwork IDs --&gt;</span>
+&lt;/<span class="keyword">array</span>&gt;</code></pre>
+                            </div>
+
+                            <div class="info-card" style="background: #fff3cd; border-left-color: #ffc107;">
+                                <h4>⚠️ Important Notes:</h4>
+                                <ul style="margin-left: 20px; margin-top: 10px;">
+                                    <li>Always use the latest SDK version for best SKAN support</li>
+                                    <li>Include all ad network SKAdNetwork IDs in Info.plist</li>
+                                    <li>Test ATT prompt thoroughly before release</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span>📡 TR2: SKAN Network IDs Configuration</span>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="info-card">
+                                <h4>🔗 SKAdNetwork IDs List</h4>
+                                <p>Get the complete list from GitHub: <a href="https://github.com/skadnetwork/ad-network-ids" target="_blank" style="color: #667eea;">SKAdNetwork ID Registry</a></p>
+                                <p style="margin-top: 10px;">Apple's official list: <a href="https://developer.apple.com/documentation/storekit/skadnetwork" target="_blank" style="color: #667eea;">Apple SKAdNetwork Documentation</a></p>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">XML - Complete SKAdNetwork Configuration</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code>&lt;<span class="keyword">key</span>&gt;SKAdNetworkItems&lt;/<span class="keyword">key</span>&gt;
+&lt;<span class="keyword">array</span>&gt;
+    <span class="comment">&lt;!-- AppsFlyer's SKAdNetwork ID --&gt;</span>
+    &lt;<span class="keyword">dict</span>&gt;
+        &lt;<span class="keyword">key</span>&gt;SKAdNetworkIdentifier&lt;/<span class="keyword">key</span>&gt;
+        &lt;<span class="keyword">string</span>&gt;v9wttpbfk9.skadnetwork&lt;/<span class="keyword">string</span>&gt;
+    &lt;/<span class="keyword">dict</span>&gt;
+    
+    <span class="comment">&lt;!-- Facebook --&gt;</span>
+    &lt;<span class="keyword">dict</span>&gt;
+        &lt;<span class="keyword">key</span>&gt;SKAdNetworkIdentifier&lt;/<span class="keyword">key</span>&gt;
+        &lt;<span class="keyword">string</span>&gt;v9wttpbfk9.skadnetwork&lt;/<span class="keyword">string</span>&gt;
+    &lt;/<span class="keyword">dict</span>&gt;
+    
+    <span class="comment">&lt;!-- Google Ads --&gt;</span>
+    &lt;<span class="keyword">dict</span>&gt;
+        &lt;<span class="keyword">key</span>&gt;SKAdNetworkIdentifier&lt;/<span class="keyword">key</span>&gt;
+        &lt;<span class="keyword">string</span>&gt;cstr6suwn9.skadnetwork&lt;/<span class="keyword">string</span>&gt;
+    &lt;/<span class="keyword">dict</span>&gt;
+    
+    <span class="comment">&lt;!-- Add additional network IDs as needed --&gt;</span>
+    <span class="comment">&lt;!-- Complete list should include all your ad partners --&gt;</span>
+&lt;/<span class="keyword">array</span>&gt;</code></pre>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">Swift - Programmatic SKAdNetwork Registration</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code><span class="keyword">import</span> StoreKit
+<span class="keyword">import</span> AdSupport
+
+<span class="comment">// Register for SKAdNetwork attribution</span>
+<span class="keyword">func</span> <span class="function">registerForSKAdNetworkAttribution</span>() {
+    <span class="keyword">if</span> #available(iOS 14.0, *) {
+        <span class="comment">// Register app for attribution</span>
+        SKAdNetwork.registerAppForAdNetworkAttribution()
+        
+        <span class="comment">// Update conversion value based on user actions</span>
+        SKAdNetwork.updateConversionValue(0)
+        
+        print(<span class="string">"✅ SKAdNetwork registration complete"</span>)
+    }
+}
+
+<span class="comment">// Update conversion value with new iOS 15+ API</span>
+<span class="keyword">func</span> <span class="function">updateConversionValue</span>(value: Int) {
+    <span class="keyword">if</span> #available(iOS 15.4, *) {
+        SKAdNetwork.updatePostbackConversionValue(
+            value,
+            completionHandler: { error <span class="keyword">in</span>
+                <span class="keyword">if</span> <span class="keyword">let</span> error = error {
+                    print(<span class="string">"❌ Error updating CV: \(error)"</span>)
+                } <span class="keyword">else</span> {
+                    print(<span class="string">"✅ CV updated to: \(value)"</span>)
+                }
+            }
+        )
+    } <span class="keyword">else</span> <span class="keyword">if</span> #available(iOS 14.0, *) {
+        SKAdNetwork.updateConversionValue(value)
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span>🧪 TR3 & TR4: Testing & Validation</span>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="info-card">
+                                <h4>📱 SKAN Test Session</h4>
+                                <p><strong>Documentation:</strong> <a href="https://support.appsflyer.com/hc/en-us/articles/207032066" target="_blank" style="color: #667eea;">SKAdTest Postback Testing</a></p>
+                                <p><strong>Apple Developer:</strong> <a href="https://developer.apple.com/documentation/storekit/skadnetwork/testing_skadnetwork_attribution" target="_blank" style="color: #667eea;">Apple SKAdNetwork Testing Guide</a></p>
+                            </div>
+
+                            <div class="info-card">
+                                <h4>📊 SKAN 4 Support in AppsFlyer</h4>
+                                <p><strong>Help Center:</strong> <a href="https://support.appsflyer.com/hc/en-us/articles/12517894520081" target="_blank" style="color: #667eea;">SKAN 4 Support Documentation</a></p>
+                                
+                                <ul style="margin-left: 20px; margin-top: 15px;">
+                                    <li>✅ Use the AppsFlyer dashboard to validate both organic and non-organic installs</li>
+                                    <li>✅ Register a test device to ensure attribution is logged and not treated as a reinstall</li>
+                                    <li>✅ Review SKAdNetwork reports in AppsFlyer's dashboard for proper attribution and conversion value data</li>
+                                </ul>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">Flutter - Test Implementation</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code><span class="keyword">import</span> <span class="string">'package:appsflyer_sdk/appsflyer_sdk.dart'</span>;
+
+<span class="keyword">class</span> <span class="function">SKANTestManager</span> {
+  <span class="keyword">late</span> AppsflyerSdk _appsflyerSdk;
+  
+  <span class="comment">/// Initialize SDK in test mode</span>
+  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">initializeTestMode</span>() <span class="keyword">async</span> {
+    <span class="keyword">final</span> options = AppsFlyerOptions(
+      afDevKey: <span class="string">'YOUR_DEV_KEY'</span>,
+      appId: <span class="string">'YOUR_APP_ID'</span>,
+      showDebug: <span class="keyword">true</span>, <span class="comment">// Enable debug mode</span>
+      timeToWaitForATTUserAuthorization: 10.0,
+      <span class="comment">// Enable test mode for SKAN</span>
+      isDebug: <span class="keyword">true</span>,
+    );
+    
+    _appsflyerSdk = AppsflyerSdk(options);
+    
+    <span class="comment">// Register test device</span>
+    <span class="keyword">await</span> _registerTestDevice();
+    
+    <span class="comment">// Initialize SDK</span>
+    _appsflyerSdk.initSdk(
+      registerConversionDataCallback: <span class="keyword">true</span>,
+      registerOnAppOpenAttributionCallback: <span class="keyword">true</span>,
+      registerOnDeepLinkingCallback: <span class="keyword">true</span>
+    );
+    
+    <span class="comment">// Log test conversion values</span>
+    <span class="keyword">await</span> _testConversionValues();
+  }
+  
+  <span class="comment">/// Register device as test device</span>
+  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_registerTestDevice</span>() <span class="keyword">async</span> {
+    <span class="comment">// Get device ID for testing</span>
+    <span class="keyword">final</span> deviceId = <span class="keyword">await</span> _appsflyerSdk.getAppsFlyerId();
+    print(<span class="string">'🧪 Test Device ID: $deviceId'</span>);
+    
+    <span class="comment">// Register in AppsFlyer dashboard as test device</span>
+    <span class="comment">// This prevents the device from being counted in production metrics</span>
+  }
+  
+  <span class="comment">/// Test different conversion values</span>
+  <span class="keyword">Future</span>&lt;<span class="keyword">void</span>&gt; <span class="function">_testConversionValues</span>() <span class="keyword">async</span> {
+    <span class="comment">// Test conversion value 0 (install)</span>
+    _appsflyerSdk.logEvent(<span class="string">'install_test'</span>, {});
+    
+    <span class="comment">// Test revenue event (CV bits 0-1)</span>
+    _appsflyerSdk.logEvent(<span class="string">'af_purchase'</span>, {
+      <span class="string">'af_revenue'</span>: 150.00,
+      <span class="string">'af_currency'</span>: <span class="string">'USD'</span>,
+      <span class="string">'test_mode'</span>: <span class="keyword">true</span>
+    });
+    
+    <span class="comment">// Test engagement events</span>
+    _appsflyerSdk.logEvent(<span class="string">'af_complete_registration'</span>, {
+      <span class="string">'test_mode'</span>: <span class="keyword">true</span>
+    });
+    
+    print(<span class="string">'✅ Test events logged'</span>);
+  }
+  
+  <span class="comment">/// Validate SKAN postback (for testing)</span>
+  <span class="keyword">void</span> <span class="function">validateSKANPostback</span>(Map&lt;String, dynamic&gt; postback) {
+    print(<span class="string">'📮 SKAN Postback Received:'</span>);
+    print(<span class="string">'  Version: ${postback["version"]}'</span>);
+    print(<span class="string">'  Ad Network ID: ${postback["ad-network-id"]}'</span>);
+    print(<span class="string">'  Campaign ID: ${postback["campaign-id"]}'</span>);
+    print(<span class="string">'  Conversion Value: ${postback["conversion-value"]}'</span>);
+    print(<span class="string">'  Source App ID: ${postback["source-app-id"]}'</span>);
+    print(<span class="string">'  Transaction ID: ${postback["transaction-id"]}'</span>);
+    
+    <span class="comment">// SKAN 4.0 fields</span>
+    <span class="keyword">if</span> (postback[<span class="string">"coarse-conversion-value"</span>] != <span class="keyword">null</span>) {
+      print(<span class="string">'  Coarse CV: ${postback["coarse-conversion-value"]}'</span>);
+    }
+    <span class="keyword">if</span> (postback[<span class="string">"source-domain"</span>] != <span class="keyword">null</span>) {
+      print(<span class="string">'  Source Domain: ${postback["source-domain"]}'</span>);
+    }
+  }
+}</code></pre>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">Testing Profile Configuration - SKAdNetworkTest.plist</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code><span class="comment">&lt;!-- Create a test profile for SKAN testing --&gt;</span>
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" 
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;plist version="1.0"&gt;
+&lt;dict&gt;
+    &lt;key&gt;SKAdNetworkTestMode&lt;/key&gt;
+    &lt;true/&gt;
+    
+    &lt;key&gt;SKAdNetworkTestPostbackURLs&lt;/key&gt;
+    &lt;array&gt;
+        &lt;string&gt;https://your-test-server.com/skan-postback&lt;/string&gt;
+    &lt;/array&gt;
+    
+    &lt;key&gt;SKAdNetworkTestConversionValues&lt;/key&gt;
+    &lt;array&gt;
+        &lt;integer&gt;0&lt;/integer&gt;
+        &lt;integer&gt;15&lt;/integer&gt;
+        &lt;integer&gt;31&lt;/integer&gt;
+        &lt;integer&gt;63&lt;/integer&gt;
+    &lt;/array&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="accordion-item">
+                        <div class="accordion-header">
+                            <span>📚 TR5: Developer Documentation</span>
+                            <span class="accordion-arrow">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="info-card">
+                                <h4>📖 Required Documentation</h4>
+                                <p>Provide comprehensive developer documentation including:</p>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">README.md - Project Documentation</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code># AppsFlyer SKAN Implementation Guide
+
+## 📋 Overview
+This guide provides complete implementation details for AppsFlyer SDK with SKAN support.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Flutter SDK 3.0+
+- Xcode 14.0+
+- iOS deployment target 12.0+
+- AppsFlyer account with app configured
+
+### Installation
+
+1. **Add dependencies to `pubspec.yaml`:**
+```yaml
+dependencies:
+  appsflyer_sdk: ^6.13.0
+  app_tracking_transparency: ^2.0.4
+```
+
+2. **iOS Configuration:**
+   - Add SKAdNetwork IDs to Info.plist
+   - Configure ATT usage description
+   - Enable SKAN in AppsFlyer dashboard
+
+## 🏗️ Architecture
+
+### Framework Overview
+```
+┌─────────────────────────────────────┐
+│         Flutter Application         │
+├─────────────────────────────────────┤
+│      AppsFlyer SDK Manager          │
+├─────────────────────────────────────┤
+│   ATT Handler  │  SKAN Processor    │
+├─────────────────────────────────────┤
+│      iOS SKAdNetwork Framework      │
+└─────────────────────────────────────┘
+```
+
+## 📱 Implementation Details
+
+### 1. SDK Initialization
+- Initialize on app launch
+- Handle ATT permission request
+- Configure conversion value schema
+
+### 2. Event Tracking
+- Revenue events → Bits 0-1
+- HBB Revenue → Bit 2  
+- Mobile Revenue → Bit 3
+- Sign Up → Bit 4
+- Add to Cart → Bit 5
+- Checkout → Bit 6
+
+### 3. Testing Setup
+- Register test devices
+- Use sandbox environment
+- Validate postbacks
+
+## 🧪 Testing
+
+### Local Testing (Android Studio/Xcode)
+```bash
+flutter run --debug
+```
+
+### TestFlight Testing
+1. Archive and upload to App Store Connect
+2. Configure external testing group
+3. Monitor SKAN postbacks in dashboard
+
+## 📊 QA Test Scenarios
+
+| Scenario | Expected Result | Validation |
+|----------|----------------|------------|
+| Fresh Install | CV = 0 | Check dashboard |
+| Purchase > $100 | CV bits 0-1 = 11 | Verify in reports |
+| Sign Up Complete | CV bit 4 = 1 | Check conversion |
+| ATT Denied | SKAN-only mode | Limited tracking |
+
+## 🔍 Debugging
+
+### Enable Debug Logs
+```dart
+AppsFlyerOptions(
+  showDebug: true,
+  isDebug: true
+)
+```
+
+### Check Conversion Values
+- Use AppsFlyer dashboard
+- Monitor Xcode console
+- Review SKAN reports
+
+## 📈 Analytics Reports
+
+### Available Reports
+1. **SKAN Overview** - Aggregate performance
+2. **Conversion Values** - CV distribution
+3. **Campaign Performance** - By source
+4. **Cohort Analysis** - User quality
+
+## 🚨 Common Issues & Solutions
+
+| Issue | Solution |
+|-------|----------|
+| No postbacks received | Verify SKAdNetwork IDs |
+| Wrong CV values | Check event mapping |
+| Missing attribution | Ensure ATT handling |
+| Test data in production | Use separate test app |
+
+## 📞 Support
+
+- AppsFlyer Support: support@appsflyer.com
+- Documentation: https://support.appsflyer.com
+- GitHub Issues: [Report Here]
+
+## 📝 License
+[Your License Information]
+</code></pre>
+                            </div>
+
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span class="code-language">QA Testing Guide</span>
+                                    <button class="copy-btn">📋 Copy</button>
+                                </div>
+                                <pre><code># QA Testing Guide for SKAN Implementation
+
+## Test Environment Setup
+
+### 1. Perfecto Integration
+- Configure Perfecto cloud devices
+- Set up iOS 14.5+ test devices
+- Enable SKAN test mode
+
+### 2. Test Scenarios
+
+#### Scenario 1: Fresh Install with ATT Granted
+**Steps:**
+1. Uninstall app completely
+2. Install fresh build
+3. Accept ATT prompt
+4. Verify conversion value = 0
+
+**Expected:**
+- Full tracking enabled
+- IDFA collected
+- Conversion value updates
+
+#### Scenario 2: Purchase Flow
+**Steps:**
+1. Complete purchase > $100
+2. Wait for CV update
+3. Check AppsFlyer dashboard
+
+**Expected:**
+- CV bits 0-1 = 11 (binary)
+- Revenue tracked
+- SKAN postback sent
+
+#### Scenario 3: Consent Toggle
+**Steps:**
+1. Start with ATT granted
+2. Go to settings
+3. Revoke consent
+4. Verify SKAN-only mode
+
+**Expected:**
+- Smooth transition
+- No PII collected
+- Basic CV updates only
+
+## Validation Checklist
+
+- [ ] ATT prompt appears on first launch
+- [ ] SKAdNetwork IDs properly configured
+- [ ] Conversion values update correctly
+- [ ] Test postbacks received
+- [ ] Dashboard shows proper attribution
+- [ ] No crashes during consent changes
+- [ ] Events logged accurately
+- [ ] SKAN 4.0 features work (iOS 16.1+)
+
+## Report Template
+
+### Test Report Format
+```
+Test ID: SKAN-001
+Date: [Date]
+Tester: [Name]
+Build: [Version]
+
+Scenario: [Description]
+Steps: [Detailed steps]
+Expected: [Expected result]
+Actual: [Actual result]
+Status: PASS/FAIL
+Evidence: [Screenshots/Logs]
+```</code></pre>
+                            </div>
+
+                            <div class="info-card" style="background: #d4edda; border-left-color: #28a745;">
+                                <h4>✅ Best Practices</h4>
+                                <ul style="margin-left: 20px; margin-top: 10px;">
+                                    <li>Always test on real devices, not just simulators</li>
+                                    <li>Use separate test app IDs to avoid polluting production data</li>
+                                    <li>Document all conversion value mappings clearly</li>
+                                    <li>Monitor SKAN postback delays (24-48 hours)</li>
+                                    <li>Keep SDK versions updated for latest features</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h3>🎯 Implementation Checklist</h3>
+                    <div style="margin-top: 15px;">
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" style="margin-right: 10px;">
+                            TR1: AppsFlyer SDK integrated with Flutter
+                        </label>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" style="margin-right: 10px;">
+                            TR2: All SKAdNetwork IDs added to Info.plist
+                        </label>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" style="margin-right: 10px;">
+                            TR3: SKAN test sessions completed successfully
+                        </label>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" style="margin-right: 10px;">
+                            TR4: SKAN 4 features validated
+                        </label>
+                        <label style="display: block; margin: 10px 0;">
+                            <input type="checkbox" style="margin-right: 10px;">
+                            TR5: Complete documentation provided
+                        </label>
+                    </div>
+                </div>
+
+                <div class="info-card" style="background: #fff3cd; border-left-color: #ffc107;">
+                    <h3>⚠️ Critical Reminders</h3>
+                    <ul style="margin-left: 20px; margin-top: 10px;">
+                        <li>SKAN postbacks have 24-48 hour delay + random timer</li>
+                        <li>Conversion values can only increase, never decrease</li>
+                        <li>Test thoroughly before production deployment</li>
+                        <li>Keep all SKAdNetwork IDs updated regularly</li>
+                        <li>Monitor Apple's SKAN updates for new features</li>
+                    </ul>
+                </div>
+            </div>
+
             <!-- Interactive Demo Tab -->
             <div id="demo" class="tab-content">
                 <h2 class="section-title">Interactive SKAN Simulator</h2>
@@ -1365,13 +1387,13 @@
                     <p>Click events to see how they update the conversion value in real-time!</p>
                     
                     <div class="demo-controls">
-                        <button class="demo-btn" onclick="simulateEvent('revenue', 150)">💰 Revenue $150</button>
-                        <button class="demo-btn" onclick="simulateEvent('hbb_revenue', 200)">📺 HBB Revenue</button>
-                        <button class="demo-btn" onclick="simulateEvent('mobile_revenue', 50)">📱 Mobile Revenue</button>
-                        <button class="demo-btn" onclick="simulateEvent('signup', 1)">✍️ Sign Up</button>
-                        <button class="demo-btn" onclick="simulateEvent('add_cart', 1)">🛒 Add to Cart</button>
-                        <button class="demo-btn" onclick="simulateEvent('checkout', 1)">💳 Checkout</button>
-                        <button class="demo-btn" onclick="resetSimulation()">🔄 Reset</button>
+                        <button class="demo-btn" id="revenue-btn">💰 Revenue $150</button>
+                        <button class="demo-btn" id="hbb-btn">📺 HBB Revenue</button>
+                        <button class="demo-btn" id="mobile-btn">📱 Mobile Revenue</button>
+                        <button class="demo-btn" id="signup-btn">✍️ Sign Up</button>
+                        <button class="demo-btn" id="cart-btn">🛒 Add to Cart</button>
+                        <button class="demo-btn" id="checkout-btn">💳 Checkout</button>
+                        <button class="demo-btn" id="reset-btn">🔄 Reset</button>
                     </div>
                     
                     <div class="demo-output" id="demo-output">
@@ -1386,45 +1408,6 @@
                 </div>
 
                 <div class="info-card" style="margin-top: 30px;">
-                    <h3>📱 Test Your Configuration</h3>
-                    <div class="flow-diagram">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                            <div>
-                                <h4>Consent Granted Flow</h4>
-                                <div class="flow-step">
-                                    <span class="status-indicator status-granted"></span>
-                                    ATT Permission: Authorized
-                                </div>
-                                <div class="flow-arrow">↓</div>
-                                <div class="flow-step">
-                                    Full Event Tracking
-                                </div>
-                                <div class="flow-arrow">↓</div>
-                                <div class="flow-step">
-                                    Rich Conversion Values (0-63)
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <h4>Consent Denied Flow</h4>
-                                <div class="flow-step">
-                                    <span class="status-indicator status-denied"></span>
-                                    ATT Permission: Denied
-                                </div>
-                                <div class="flow-arrow">↓</div>
-                                <div class="flow-step">
-                                    Limited Event Tracking
-                                </div>
-                                <div class="flow-arrow">↓</div>
-                                <div class="flow-step">
-                                    Basic Conversion Values
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-card">
                     <h3>🚀 Next Steps</h3>
                     <ul style="margin-left: 20px; margin-top: 10px;">
                         <li>Implement SDK in your Flutter app</li>
@@ -1440,180 +1423,10 @@
     </div>
 
     <script>
-        // State management
-        let currentTab = 'overview';
-        let conversionState = {
-            revenue: 0,
-            hbb_revenue: false,
-            mobile_revenue: false,
-            signup: false,
-            add_cart: false,
-            checkout: false
-        };
-
-        // Tab switching
-        function showTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Remove active class from all nav tabs
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Show selected tab
-            document.getElementById(tabName).classList.add('active');
-            
-            // Add active class to selected nav tab
-            event.target.classList.add('active');
-            
-            currentTab = tabName;
-        }
-
-        // Highlight flow steps
-        function highlightStep(element) {
-            element.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-            element.style.color = 'white';
-            
-            setTimeout(() => {
-                element.style.background = 'white';
-                element.style.color = 'black';
-            }, 2000);
-        }
-
-        // Show event detail
-        function showEventDetail(eventName) {
-            alert(`Event: ${eventName}\n\nThis event updates specific bits in the 6-bit conversion value to track user behavior while maintaining privacy.`);
-        }
-
-        // Toggle accordion
-        function toggleAccordion(header) {
-            const content = header.nextElementSibling;
-            const arrow = header.querySelector('.accordion-arrow');
-            
-            content.classList.toggle('active');
-            arrow.classList.toggle('active');
-        }
-
-        // Copy code to clipboard
-        function copyCode(button) {
-            const codeBlock = button.closest('.code-block');
-            const code = codeBlock.querySelector('code').textContent;
-            
-            navigator.clipboard.writeText(code).then(() => {
-                const originalText = button.innerHTML;
-                button.innerHTML = '✅ Copied!';
-                button.style.background = '#00b894';
-                
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.style.background = '#667eea';
-                }, 2000);
-            }).catch(err => {
-                // Fallback for browsers that don't support clipboard API
-                const textarea = document.createElement('textarea');
-                textarea.value = code;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                
-                const originalText = button.innerHTML;
-                button.innerHTML = '✅ Copied!';
-                button.style.background = '#00b894';
-                
-                setTimeout(() => {
-                    button.innerHTML = originalText;
-                    button.style.background = '#667eea';
-                }, 2000);
-            });
-        }
-
-        // Simulate SKAN events
-        function simulateEvent(eventType, value) {
-            switch(eventType) {
-                case 'revenue':
-                    if (value > 100) conversionState.revenue = 3;
-                    else if (value > 50) conversionState.revenue = 2;
-                    else if (value > 0) conversionState.revenue = 1;
-                    break;
-                case 'hbb_revenue':
-                    conversionState.hbb_revenue = true;
-                    break;
-                case 'mobile_revenue':
-                    conversionState.mobile_revenue = true;
-                    break;
-                case 'signup':
-                    conversionState.signup = true;
-                    break;
-                case 'add_cart':
-                    conversionState.add_cart = true;
-                    break;
-                case 'checkout':
-                    conversionState.checkout = true;
-                    break;
-            }
-            
-            updateConversionDisplay();
-        }
-
-        // Update conversion value display
-        function updateConversionDisplay() {
-            // Calculate binary representation
-            let binary = '';
-            binary += conversionState.checkout ? '1' : '0';
-            binary += conversionState.add_cart ? '1' : '0';
-            binary += conversionState.signup ? '1' : '0';
-            binary += conversionState.mobile_revenue ? '1' : '0';
-            binary += conversionState.hbb_revenue ? '1' : '0';
-            binary += conversionState.revenue.toString(2).padStart(2, '0');
-            
-            // Reverse for correct bit order
-            binary = binary.split('').reverse().join('');
-            
-            // Calculate decimal value
-            const decimal = parseInt(binary, 2);
-            
-            // Collect tracked events
-            const trackedEvents = [];
-            if (conversionState.revenue > 0) trackedEvents.push(`Revenue Band ${conversionState.revenue}`);
-            if (conversionState.hbb_revenue) trackedEvents.push('HBB Revenue');
-            if (conversionState.mobile_revenue) trackedEvents.push('Mobile Revenue');
-            if (conversionState.signup) trackedEvents.push('Sign Up');
-            if (conversionState.add_cart) trackedEvents.push('Add to Cart');
-            if (conversionState.checkout) trackedEvents.push('Checkout');
-            
-            // Update display - make sure element exists
-            const displayElement = document.getElementById('conversion-display');
-            if (displayElement) {
-                displayElement.innerHTML = `
-                    <p><strong>Binary:</strong> <span class="highlight">${binary}</span></p>
-                    <p><strong>Decimal CV:</strong> <span class="highlight">${decimal}</span></p>
-                    <p><strong>Events Tracked:</strong> ${trackedEvents.length > 0 ? trackedEvents.join(', ') : 'None'}</p>
-                    <p style="margin-top: 10px;"><span class="status-indicator status-granted"></span>Conversion value updated!</p>
-                `;
-            } else {
-                // If element doesn't exist, create it
-                const output = document.getElementById('demo-output');
-                if (output) {
-                    output.innerHTML = `
-                        <h4>Current State:</h4>
-                        <p><span class="status-indicator status-granted"></span>Event tracked!</p>
-                        <div id="conversion-display" style="margin-top: 15px;">
-                            <p><strong>Binary:</strong> <span class="highlight">${binary}</span></p>
-                            <p><strong>Decimal CV:</strong> <span class="highlight">${decimal}</span></p>
-                            <p><strong>Events Tracked:</strong> ${trackedEvents.length > 0 ? trackedEvents.join(', ') : 'None'}</p>
-                        </div>
-                    `;
-                }
-            }
-        }
-
-        // Reset simulation
-        function resetSimulation() {
-            conversionState = {
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // State management
+            let conversionState = {
                 revenue: 0,
                 hbb_revenue: false,
                 mobile_revenue: false,
@@ -1621,44 +1434,190 @@
                 add_cart: false,
                 checkout: false
             };
-            
-            const output = document.getElementById('demo-output');
-            if (output) {
-                output.innerHTML = `
-                    <h4>Current State:</h4>
-                    <p><span class="status-indicator status-denied"></span>Simulation reset - waiting for events...</p>
-                    <div id="conversion-display" style="margin-top: 15px;">
-                        <p><strong>Binary:</strong> <span class="highlight">000000</span></p>
-                        <p><strong>Decimal CV:</strong> <span class="highlight">0</span></p>
-                        <p><strong>Events Tracked:</strong> None</p>
-                    </div>
-                `;
-            }
-        }
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Ensure first tab is active
-            const firstTab = document.querySelector('.nav-tab.active');
-            const firstContent = document.querySelector('.tab-content.active');
-            
-            if (!firstContent) {
-                const overview = document.getElementById('overview');
-                if (overview) {
-                    overview.classList.add('active');
+            // Tab switching functionality
+            const navTabs = document.querySelectorAll('.nav-tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            navTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and contents
+                    navTabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(targetTab).classList.add('active');
+                });
+            });
+
+            // Accordion functionality
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', function() {
+                    const content = this.nextElementSibling;
+                    const arrow = this.querySelector('.accordion-arrow');
+                    
+                    content.classList.toggle('active');
+                    arrow.classList.toggle('active');
+                });
+            });
+
+            // Copy code functionality
+            const copyButtons = document.querySelectorAll('.copy-btn');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const codeBlock = this.closest('.code-block');
+                    const code = codeBlock.querySelector('code').textContent;
+                    
+                    // Create textarea to copy from
+                    const textarea = document.createElement('textarea');
+                    textarea.value = code;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    
+                    try {
+                        document.execCommand('copy');
+                        const originalText = this.innerHTML;
+                        this.innerHTML = '✅ Copied!';
+                        this.style.background = '#00b894';
+                        
+                        setTimeout(() => {
+                            this.innerHTML = originalText;
+                            this.style.background = '#667eea';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy:', err);
+                    }
+                    
+                    document.body.removeChild(textarea);
+                });
+            });
+
+            // Interactive Demo functionality
+            function updateConversionDisplay() {
+                // Calculate binary representation
+                let binary = '';
+                binary += conversionState.checkout ? '1' : '0';
+                binary += conversionState.add_cart ? '1' : '0';
+                binary += conversionState.signup ? '1' : '0';
+                binary += conversionState.mobile_revenue ? '1' : '0';
+                binary += conversionState.hbb_revenue ? '1' : '0';
+                binary += conversionState.revenue.toString(2).padStart(2, '0');
+                
+                // Reverse for correct bit order
+                binary = binary.split('').reverse().join('');
+                
+                // Calculate decimal value
+                const decimal = parseInt(binary, 2);
+                
+                // Collect tracked events
+                const trackedEvents = [];
+                if (conversionState.revenue > 0) trackedEvents.push(`Revenue Band ${conversionState.revenue}`);
+                if (conversionState.hbb_revenue) trackedEvents.push('HBB Revenue');
+                if (conversionState.mobile_revenue) trackedEvents.push('Mobile Revenue');
+                if (conversionState.signup) trackedEvents.push('Sign Up');
+                if (conversionState.add_cart) trackedEvents.push('Add to Cart');
+                if (conversionState.checkout) trackedEvents.push('Checkout');
+                
+                // Update display
+                const displayElement = document.getElementById('conversion-display');
+                if (displayElement) {
+                    displayElement.innerHTML = `
+                        <p><strong>Binary:</strong> <span class="highlight">${binary}</span></p>
+                        <p><strong>Decimal CV:</strong> <span class="highlight">${decimal}</span></p>
+                        <p><strong>Events Tracked:</strong> ${trackedEvents.length > 0 ? trackedEvents.join(', ') : 'None'}</p>
+                        <p style="margin-top: 10px;"><span class="status-indicator status-granted"></span>Conversion value updated!</p>
+                    `;
                 }
             }
-            
-            // Add smooth scroll behavior
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth'
-                        });
+
+            // Demo button event listeners
+            const revenueBtn = document.getElementById('revenue-btn');
+            if (revenueBtn) {
+                revenueBtn.addEventListener('click', function() {
+                    conversionState.revenue = 3; // $100+ band
+                    updateConversionDisplay();
+                });
+            }
+
+            const hbbBtn = document.getElementById('hbb-btn');
+            if (hbbBtn) {
+                hbbBtn.addEventListener('click', function() {
+                    conversionState.hbb_revenue = true;
+                    updateConversionDisplay();
+                });
+            }
+
+            const mobileBtn = document.getElementById('mobile-btn');
+            if (mobileBtn) {
+                mobileBtn.addEventListener('click', function() {
+                    conversionState.mobile_revenue = true;
+                    updateConversionDisplay();
+                });
+            }
+
+            const signupBtn = document.getElementById('signup-btn');
+            if (signupBtn) {
+                signupBtn.addEventListener('click', function() {
+                    conversionState.signup = true;
+                    updateConversionDisplay();
+                });
+            }
+
+            const cartBtn = document.getElementById('cart-btn');
+            if (cartBtn) {
+                cartBtn.addEventListener('click', function() {
+                    conversionState.add_cart = true;
+                    updateConversionDisplay();
+                });
+            }
+
+            const checkoutBtn = document.getElementById('checkout-btn');
+            if (checkoutBtn) {
+                checkoutBtn.addEventListener('click', function() {
+                    conversionState.checkout = true;
+                    updateConversionDisplay();
+                });
+            }
+
+            const resetBtn = document.getElementById('reset-btn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    conversionState = {
+                        revenue: 0,
+                        hbb_revenue: false,
+                        mobile_revenue: false,
+                        signup: false,
+                        add_cart: false,
+                        checkout: false
+                    };
+                    
+                    const output = document.getElementById('demo-output');
+                    if (output) {
+                        output.innerHTML = `
+                            <h4>Current State:</h4>
+                            <p><span class="status-indicator status-denied"></span>Simulation reset - waiting for events...</p>
+                            <div id="conversion-display" style="margin-top: 15px;">
+                                <p><strong>Binary:</strong> <span class="highlight">000000</span></p>
+                                <p><strong>Decimal CV:</strong> <span class="highlight">0</span></p>
+                                <p><strong>Events Tracked:</strong> None</p>
+                            </div>
+                        `;
                     }
+                });
+            }
+
+            // Schema card hover effects
+            const schemaCards = document.querySelectorAll('.schema-card');
+            schemaCards.forEach(card => {
+                card.addEventListener('click', function() {
+                    const eventName = this.querySelector('.event-name').textContent;
+                    alert(`Event: ${eventName}\n\nThis event updates specific bits in the 6-bit conversion value to track user behavior while maintaining privacy.`);
                 });
             });
         });
